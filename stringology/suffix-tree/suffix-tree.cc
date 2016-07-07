@@ -16,6 +16,7 @@
  */
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>
@@ -27,14 +28,15 @@ using namespace std;
 #define REP(i, n) FOR(i, 0, n)
 
 const long N = 1000, V = 2*N;
-int allo, fork, suff, len[V], sl[V];
+long allo, fork, suff, len[V], sl[V];
 const char* pos[N];
 map<int, int> to[V];
 
-int new_node(const char* p, int l)
+long new_node(const char* p, long l)
 {
   pos[allo] = p;
   len[allo] = l;
+  sl[allo] = 0;
   to[allo].clear();
   return allo++;
 };
@@ -45,41 +47,46 @@ void init()
   new_node(0, 0);
 }
 
-void add(const string& s)
+void add(const char* s)
 {
-  REP(i, s.size()+1) {
-    int last = 0, c = i == s.size() ? -1 : s[i];
+  long size = strlen(s);
+  REP(i, size+1) {
+    long last = 0, c = s[i]; // may be NUL
     suff++;
     while (suff > 0) {
-      int cc = i+1-suff == s.size() ? -1 : s[i+1-suff];
+      long cc = s[i+1-suff]; // may be NUL
       auto it = to[fork].find(cc);
-      while (it != to[fork].end() && suff > len[it->second]) {
+      while (it != to[fork].end() && suff > len[it->second] && to[it->second].size()) {
         fork = it->second;
         suff -= len[fork];
-        cc = i+1-suff == s.size() ? -1 : s[i+1-suff];
+        cc = s[i+1-suff]; // may be NUL
         it = to[fork].find(cc);
       }
       if (it == to[fork].end()) {
-        if (c >= 0)
-          to[fork][cc] = new_node(&s[i+1-suff], s.size()-(i+1-suff));
+        if (c)
+          to[fork][cc] = new_node(&s[i+1-suff], size-(i+1-suff));
         sl[last] = fork;
         last = 0;
       } else {
-        int t = pos[it->second][suff-1];
+        long u, t = pos[it->second][suff-1]; // may be NUL
         if (c == t) {
           sl[last] = fork;
           break;
+        }
+        if (! t) { // extend leaf of a preceding string
+          u = it->second;
+          to[u][c] = new_node(&s[i], size-i);
         } else {
-          int u = new_node(pos[it->second], suff-1);
-          if (c >= 0)
-            to[u][c] = new_node(&s[i], s.size()-i);
+          u = new_node(pos[it->second], suff-1);
+          if (c)
+            to[u][c] = new_node(&s[i], size-i);
           to[u][t] = it->second;
           pos[it->second] += suff-1;
           len[it->second] -= suff-1;
           it->second = u;
-          sl[last] = u;
-          last = u;
         }
+        sl[last] = u;
+        last = u;
       }
       if (fork)
         fork = sl[fork];
@@ -89,25 +96,25 @@ void add(const string& s)
   }
 }
 
-void dump(int d, int x)
+void dump(long d, long x)
 {
-  printf("%d\n", x);
+  printf("%ld %ld\n", x, sl[x]);
   for (auto &c: to[x]) {
     int v = c.second;
-    printf("%*s%s ", 2*d+2, "", string(pos[v]).substr(0, len[v]).c_str());
+    printf("%*s%s ", int(2*d+2), "", string(pos[v]).substr(0, len[v]).c_str());
     dump(d+1, v);
   }
 }
 
 int main()
 {
-  int m;
+  long m;
   while (cin >> m) {
     vector<string> s(m);
     init();
     for (auto& x : s) {
       cin >> x;
-      add(x);
+      add(x.c_str());
     }
     dump(0, 0);
   }
