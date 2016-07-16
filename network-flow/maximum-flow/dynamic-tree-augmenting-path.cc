@@ -21,7 +21,7 @@ const long N = 200, M = 200;
 long h[N];
 struct Edge {
   long v, c;
-  Edge *next, *dual;
+  Edge *next, *pre;
 } *e[N], pool[M*2], *allo;
 
 namespace LCT {
@@ -49,7 +49,7 @@ struct Node {
       c[1]->dlt += dlt;
       if (e->c != LONG_MAX) {
         e->c += dlt;
-        e->dual->c -= dlt;
+        e->pre->c -= dlt;
       }
       dlt = 0;
     }
@@ -154,15 +154,15 @@ void insert(long u, long v, long c)
 {
   allo->v = v; allo->c = c; allo->next = e[u]; e[u] = allo++;
   allo->v = u; allo->c = 0; allo->next = e[v]; e[v] = allo++;
-  e[u]->dual = e[v];
-  e[v]->dual = e[u];
+  e[u]->pre = e[v];
+  e[v]->pre = e[u];
 }
 
 long tree_augmenting_path(long n, long src, long sink)
 {
   Edge enull;
   enull.c = LONG_MAX;
-  enull.dual = &enull;
+  enull.pre = &enull;
   LCT::Node* a = LCT::nodes;
   LCT::null.init(&enull);
   REP(i, n)
