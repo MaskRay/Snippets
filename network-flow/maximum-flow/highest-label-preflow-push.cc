@@ -3,7 +3,7 @@
  * Ref: Network Flows: Theory, Algorithm and Applications 7.8 Highest-label preflow-push algorithm
  *
  * Time complexity: O(n^2*m^0.5)
- * The first phase 'relabel' is an optimization whose removal does not change the time complexity
+ * The first phase 'relabel' is an optimization
  *
  * Verified by poj.org 1273
  */
@@ -53,6 +53,7 @@ void relabel(long n, long src, long sink, vector<long>& h)
 long highest_label_preflow_push(long n, long src, long sink)
 {
   vector<char> vis(n, 0);
+  vis[src] = vis[sink] = 1;
   vector<long> ex(n, 0), h(n, 0);
   vector<long> head(2*n-1, -1), succ(n);
   vector<Edge*> cur(e, e+n);
@@ -62,7 +63,7 @@ long highest_label_preflow_push(long n, long src, long sink)
       ex[it->v] += it->c;
       it->rev->c += it->c;
       it->c = 0;
-      if (! vis[it->v] && it->v != sink) {
+      if (! vis[it->v]) {
         vis[it->v] = 1;
         succ[it->v] = head[h[it->v]];
         head[h[it->v]] = it->v;
@@ -71,24 +72,19 @@ long highest_label_preflow_push(long n, long src, long sink)
   for (long level = n-1; ; ) {
     while (level >= 0 && head[level] < 0) level--;
     if (level < 0) break;
-    bool first = true;
     long u = head[level];
     head[level] = succ[u];
-    for (Edge* it = e[u]; it; it = it->next)
+    for (Edge*& it = cur[u]; it; it = it->next)
       if (it->c > 0 && level == h[it->v]+1) {
         long t = min(ex[u], it->c);
         ex[u] -= t;
         ex[it->v] += t;
         it->c -= t;
         it->rev->c += t;
-        if (! vis[it->v] && it->v != src && it->v != sink) {
+        if (! vis[it->v]) {
           vis[it->v] = 1;
           succ[it->v] = head[level-1];
           head[level-1] = it->v;
-        }
-        if (first) {
-          first = false;
-          cur[u] = it;
         }
         if (! ex[u]) break;
       }
@@ -107,7 +103,6 @@ long highest_label_preflow_push(long n, long src, long sink)
   }
   return ex[sink];
 }
-
 
 int main()
 {

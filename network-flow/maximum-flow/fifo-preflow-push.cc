@@ -3,6 +3,8 @@
  * Ref: Network Flows: Theory, Algorithm and Applications 7.7 FIFO preflow-push algorithm
  *
  * Time complexity: O(n^3)
+ * The first phase 'relabel' is an optimization
+ *
  * Verified by poj.org 1273
  */
 #include <algorithm>
@@ -51,6 +53,7 @@ void relabel(long n, long src, long sink, vector<long>& h)
 long fifo_preflow_push(long n, long src, long sink)
 {
   vector<char> vis(n, 0);
+  vis[src] = vis[sink] = 1;
   vector<long> ex(n, 0), h(n, 0);
   deque<long> l;
   vector<Edge*> cur(e, e+n);
@@ -60,35 +63,25 @@ long fifo_preflow_push(long n, long src, long sink)
       ex[it->v] += it->c;
       it->rev->c += it->c;
       it->c = 0;
-      if (! vis[it->v] && it->v != sink) {
+      if (! vis[it->v]) {
         vis[it->v] = 1;
         l.push_back(it->v);
       }
     }
-  long c = 0;
   while (l.size()) {
-    c++;
     long u = l.front(), minh = 2*n-2;
-    bool first = true;
-    for (Edge* it = cur[u]; it; it = it->next)
-      if (it->c > 0) {
-        if (h[u] == h[it->v]+1) {
-          long t = min(ex[u], it->c);
-          ex[u] -= t;
-          ex[it->v] += t;
-          it->c -= t;
-          it->rev->c += t;
-          if (! vis[it->v] && it->v != src && it->v != sink) {
-            vis[it->v] = 1;
-            l.push_back(it->v);
-          }
-          if (first) {
-            first = false;
-            cur[u] = it;
-          }
-          if (! ex[u]) break;
+    for (Edge*& it = cur[u]; it; it = it->next)
+      if (it->c > 0 && h[u] == h[it->v]+1) {
+        long t = min(ex[u], it->c);
+        ex[u] -= t;
+        ex[it->v] += t;
+        it->c -= t;
+        it->rev->c += t;
+        if (! vis[it->v]) {
+          vis[it->v] = 1;
+          l.push_back(it->v);
         }
-        minh = min(minh, h[it->v]+1);
+        if (! ex[u]) break;
       }
     if (! ex[u]) {
       vis[u] = 0;
