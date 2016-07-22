@@ -5,7 +5,7 @@
  * Time complexity: O(n^2*m^0.5)
  * The first phase 'relabel' is an optimization
  *
- * Verified by poj.org 1273
+ * Verified by poj.org 1273, SPOJ FASTFLOW
  */
 #include <algorithm>
 #include <climits>

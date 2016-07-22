@@ -3,7 +3,7 @@
  * Ref: Network Flows: Theory, Algorithm and Applications 7.4 Shortest augmenting path algorithm
  *
  * Time complexity: O(n^2*m)
- * Verified by poj.org 1273
+ * Verified by poj.org 1273, SPOJ FASTFLOW
  */
 #include <algorithm>
 #include <climits>
