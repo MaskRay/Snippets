@@ -1,8 +1,5 @@
 /*
  * Palindromic tree
- *
- * Input
- * abababbababacadda
  */
 #include <algorithm>
 #include <cstdio>
@@ -13,65 +10,52 @@ using namespace std;
 
 #define FOR(i, a, b) for (remove_cv<remove_reference<decltype(b)>::type>::type i = (a); i < (b); i++)
 #define REP(i, n) FOR(i, 0, n)
-#define ROF(i, a, b) for (remove_cv<remove_reference<decltype(b)>::type>::type i = (b); --i >= (a); )
 
-const int N = 1000, AB = 26;
+const long N = 10000, AB = 127;
+char a[N+1];
+struct PalindromicTree { long len, sl, c[AB]; } pt[N+2];
 
-char s[N+1];
-int allo;
-struct Node {
-  int sl, len, c[26];
-} a[N+2];
-
-int new_node()
+void palindromic_tree(long n)
 {
-  fill_n(a[allo].c, AB, 0);
-  return allo++;
-}
-
-int get_suff(int i, int x)
-{
-  while (i-1-a[x].len < 0 || s[i-1-a[x].len] != s[i])
-    x = a[x].sl;
-  return x;
-}
-
-void build()
-{
-  allo = 0;
-  new_node();
-  a[0].sl = 1; a[0].len = 0;
-  new_node();
-  a[1].sl = 1; a[1].len = -1;
-  int x = 1;
-  for (int i = 0; s[i]; i++) {
-    x = get_suff(i, x);
-    int& v = a[x].c[s[i]-'a'];
-    if (! v) {
-      int y = new_node();
-      a[y].len = a[x].len+2;
-      a[y].sl = a[get_suff(i, a[x].sl)].c[s[i]-'a'];
-      v = y;
+  long allo = 2, u = 1;
+  pt[0].len = 0; pt[1].len = -1;
+  pt[0].sl = pt[1].sl = 1;
+  fill_n(pt[0].c, AB, 0);
+  fill_n(pt[1].c, AB, 0);
+  REP(i, n) {
+    while (i-pt[u].len-1 < 0 || a[i-pt[u].len-1] != a[i])
+      u = pt[u].sl;
+    long c = a[i];
+    if (! pt[u].c[c]) {
+      long v = allo++, w = pt[u].sl;
+      pt[v].len = pt[u].len+2;
+      while (a[i-pt[w].len-1] != a[i])
+        w = pt[w].sl;
+      pt[v].sl = pt[w].c[c];
+      fill_n(pt[v].c, AB, 0);
+      pt[u].c[c] = v;
     }
-    x = v;
+    u = pt[u].c[c];
   }
 }
 
-void dump(int d, int x)
+void dump(int d, long x)
 {
-  printf("%d\n", x);
+  printf("%ld %ld\n", x, pt[x].sl);
   REP(c, AB)
-    if (a[x].c[c] > 0) {
-      printf("%*s%c ", 2*d+2, "", 'a'+c);
-      dump(d+1, a[x].c[c]);
+    if (pt[x].c[c] > 0) {
+      printf("%*s%c ", 2*d+2, "", int(c));
+      dump(d+1, pt[x].c[c]);
     }
 }
 
 int main()
 {
-  while (cin >> s) {
-    build();
+  while (cin >> a) {
+    palindromic_tree(strlen(a));
+    puts("--- even");
     dump(0, 0);
+    puts("--- odd");
     dump(0, 1);
   }
 }
